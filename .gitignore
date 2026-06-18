@@ -5,6 +5,5 @@ env/
 *.csv
 *.json
 *.parquet
-data/
 .DS_Store
 Thumbs.db
