@@ -69,7 +69,7 @@ See the `docs/` directory:
 
 # Next Steps
 
-- Insert seed data
+~~- Insert seed data~~
 - Build feature engineering pipeline
 - Train baseline model
 - Log experiments to MLflow
