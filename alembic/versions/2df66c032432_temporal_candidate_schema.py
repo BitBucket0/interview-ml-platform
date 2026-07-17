@@ -3,7 +3,6 @@
 Revision ID: 2df66c032432
 Revises: 001_create_core_tables
 Create Date: 2026-07-06 12:38:18.356446
-
 """
 from typing import Sequence, Union
 
@@ -31,11 +30,13 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.UniqueConstraint("leetcode_id", name="uq_problems_leetcode_id"),
     )
-
-    op.create_index("ix_problems_topic_tag", "problems", ["topic_tag"])
-    op.create_index("ix_problems_difficulty", "problems", ["difficulty"])
-    op.create_index("ix_problems_active", "problems", ["is_active"])
-
+    op.create_index(
+        "ix_problems_active_topic_difficulty",
+        "problems",
+        ["topic_tag", "difficulty"],
+        unique=False,
+        postgresql_where=sa.text("is_active = true"),
+    )
     # Decision points: one row = one moment where the system could make a recommendation
     op.create_table(
         "prediction_instances",
@@ -84,18 +85,28 @@ def upgrade() -> None:
 
     op.create_index("ix_study_events_problem_id", "study_events", ["problem_id"])
 
-
 def downgrade() -> None:
     op.drop_index("ix_study_events_problem_id", table_name="study_events")
-    op.drop_constraint("fk_study_events_problem_id_problems", "study_events", type_="foreignkey")
+    op.drop_constraint(
+        "fk_study_events_problem_id_problems",
+        "study_events",
+        type_="foreignkey",
+    )
     op.drop_column("study_events", "ingested_at")
     op.drop_column("study_events", "problem_id")
 
-    op.drop_index("ix_prediction_instances_asof", table_name="prediction_instances")
-    op.drop_index("ix_prediction_instances_user_asof", table_name="prediction_instances")
+    op.drop_index(
+        "ix_prediction_instances_asof",
+        table_name="prediction_instances",
+    )
+    op.drop_index(
+        "ix_prediction_instances_user_asof",
+        table_name="prediction_instances",
+    )
     op.drop_table("prediction_instances")
 
-    op.drop_index("ix_problems_active", table_name="problems")
-    op.drop_index("ix_problems_difficulty", table_name="problems")
-    op.drop_index("ix_problems_topic_tag", table_name="problems")
+    op.drop_index(
+        "ix_problems_active_topic_difficulty",
+        table_name="problems",
+    )
     op.drop_table("problems")
